@@ -9,13 +9,22 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.multipart.MultipartFile;
 
+import javax.jws.WebParam;
+import javax.servlet.http.HttpServletRequest;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 
 @Controller
 public class HomeController {
+
+    private Path path;
 
     @Autowired
     private ProductDao productDao;
@@ -70,9 +79,50 @@ public class HomeController {
     }
 
     @RequestMapping(value = "/admin/productInventory/addProduct", method = RequestMethod.POST)
-    public String addProductPost(@ModelAttribute("product") Product product) {
+    public String addProductPost(@ModelAttribute("product") Product product, HttpServletRequest request) {
         productDao.addProduct(product);
+
+        MultipartFile productImsge = product.getProductImage();
+        String rootDirectory = request.getSession().getServletContext().getRealPath("/");
+        path = Paths.get(rootDirectory + "\\WEB-INF\\resources\\images\\" + product.getProductId() + ".png");
+
+        if (productImsge != null && !productImsge.isEmpty()) {
+            try {
+                // will transform any type of image to png
+                productImsge.transferTo(new File(path.toString()));
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                throw new RuntimeException("Product image saving failed",ex);
+
+            }
+        }
 
         return "redirect:/admin/productInventory";
     }
+
+    @RequestMapping("/admin/productInventory/deleteProduct/{id}")
+    public String deleteProduct(@PathVariable int id, Model model, HttpServletRequest request) {
+
+        // to delete the image when deleting an item
+        String rootDirectory = request.getSession().getServletContext().getRealPath("/");
+        path = Paths.get(rootDirectory + "\\WEB-INF\\resources\\images\\" + id + ".png");
+
+
+
+        // check if the path exists; if yes it means the product image file is still there and we are trying to delete that path <=> delete the file
+        if (Files.exists(path)) {
+            try {
+                Files.delete(path);
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }
+
+
+        // delete the product info from the db
+        productDao.deleteProduct(id);
+
+        return "redirect:/admin/productInventory";
+    }
+
 }

@@ -1,5 +1,7 @@
 package com.emusicstore.model;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import javax.persistence.*;
 
 @Entity
@@ -7,7 +9,7 @@ import javax.persistence.*;
 public class Product {
 
     @Id
-    // @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "productId")
     private int productId;
 
@@ -34,6 +36,10 @@ public class Product {
 
     @Column(name = "productManufacturer")
     private String productManufacturer;
+
+    // @Transient = doesn't create a field in the database table for this product image
+    @Transient
+    private MultipartFile productImage;
 
     public int getProductId() {
         return productId;
@@ -105,5 +111,13 @@ public class Product {
 
     public void setProductManufacturer(String productManufacturer) {
         this.productManufacturer = productManufacturer;
+    }
+
+    public MultipartFile getProductImage() {
+        return productImage;
+    }
+
+    public void setProductImage(MultipartFile productImage) {
+        this.productImage = productImage;
     }
 }
