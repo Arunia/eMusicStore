@@ -31,7 +31,7 @@
                     <h4>${product.productPrice} USD</h4>
                 </div>
             </div>
-        </div>
+    </div>
 
 
 
